@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, 
   PenTool, 
@@ -14,19 +14,24 @@ import {
   Sparkles,
   Camera,
   Link,
-  ExternalLink,
+  Upload,
   AlertCircle,
   Eye,
-  Check
+  Check,
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
 import { DOCTORS_DATA, CLINIC_INFO } from '../data/clinicData';
 import { Article } from '../types';
+import { processImageFile } from '../utils/imageHelper';
 
 interface InlineImageFormItem {
   id: string;
+  sourceType: 'upload' | 'link';
   url: string;
   caption: string;
   position: number; // 1: after paragraph 1, 2: after paragraph 2, -1: at the end
+  isUploading?: boolean;
 }
 
 interface WriteArticleModalProps {
@@ -49,7 +54,14 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
     '',
     ''
   ]);
+
+  // Cover image mode: 'upload' | 'link'
+  const [coverSourceType, setCoverSourceType] = useState<'upload' | 'link'>('link');
   const [coverImageUrl, setCoverImageUrl] = useState(CLINIC_INFO.images.hero);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Inline images list
   const [inlineImages, setInlineImages] = useState<InlineImageFormItem[]>([]);
   const [tagsInput, setTagsInput] = useState('Chăm sóc thú cưng, Thú y Hòa Vang, Đà Nẵng');
 
@@ -88,6 +100,25 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
     }
   ];
 
+  // Upload cover image handler
+  const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsCoverUploading(true);
+      const dataUrl = await processImageFile(file, 1200, 800, 0.85);
+      setCoverImageUrl(dataUrl);
+    } catch (err: any) {
+      alert(err.message || 'Không thể tải ảnh này lên. Vui lòng thử ảnh khác.');
+    } finally {
+      setIsCoverUploading(false);
+      if (coverFileInputRef.current) {
+        coverFileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleAddParagraph = () => {
     setContentParagraphs([...contentParagraphs, '']);
   };
@@ -103,10 +134,11 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
     setContentParagraphs(contentParagraphs.filter((_, i) => i !== index));
   };
 
-  // Thêm ảnh minh họa chèn bằng link
-  const handleAddInlineImage = (preset?: { url: string; caption: string }) => {
+  // Thêm ảnh minh họa mới (mặc định chọn link hoặc upload)
+  const handleAddInlineImage = (sourceType: 'upload' | 'link' = 'upload', preset?: { url: string; caption: string }) => {
     const newItem: InlineImageFormItem = {
       id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      sourceType,
       url: preset ? preset.url : '',
       caption: preset ? preset.caption : '',
       position: inlineImages.length === 0 ? 1 : (inlineImages.length === 1 ? 2 : -1),
@@ -116,6 +148,18 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
 
   const handleUpdateInlineImage = (id: string, updates: Partial<InlineImageFormItem>) => {
     setInlineImages(inlineImages.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  // Xử lý upload ảnh minh họa nội dung bài viết
+  const handleInlineFileUpload = async (id: string, file: File) => {
+    try {
+      handleUpdateInlineImage(id, { isUploading: true });
+      const dataUrl = await processImageFile(file, 1000, 750, 0.82);
+      handleUpdateInlineImage(id, { url: dataUrl, isUploading: false });
+    } catch (err: any) {
+      handleUpdateInlineImage(id, { isUploading: false });
+      alert(err.message || 'Lỗi khi tải ảnh. Vui lòng thử lại.');
+    }
   };
 
   const handleRemoveInlineImage = (id: string) => {
@@ -152,7 +196,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
       .map(t => t.trim())
       .filter(t => t.length > 0);
 
-    // Lọc các hình ảnh chèn hợp lệ có link URL
+    // Lọc các hình ảnh chèn hợp lệ có link URL hoặc upload
     const validInlineImages = inlineImages
       .filter(img => img.url.trim().length > 0)
       .map(img => ({
@@ -194,45 +238,45 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-3xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[95vh] sm:max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-sky-900 text-white p-5 sm:p-6 shrink-0 relative">
+        {/* Header - Optimized for mobile view */}
+        <div className="bg-sky-900 text-white p-4 sm:p-6 shrink-0 relative">
           <button
             onClick={handleResetAndClose}
-            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
             aria-label="Đóng"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 text-sky-200 text-xs font-semibold uppercase tracking-wider">
-            <PenTool className="w-4 h-4 text-amber-300" />
+          <div className="flex items-center gap-1.5 sm:gap-2 text-sky-200 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+            <PenTool className="w-3.5 h-3.5 text-amber-300" />
             <span>Phòng Khám Thú Y Hòa Vang</span>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
-            Module Viết & Xuất Bản Tin Tức
+          <h3 className="text-lg sm:text-2xl font-black text-white mt-1 pr-8">
+            Viết & Xuất Bản Tin Tức
           </h3>
 
-          <p className="text-xs text-sky-200/90 mt-1">
-            Biên tập bài viết, cẩm nang chăm sóc và chèn liên kết hình ảnh minh họa sinh động
+          <p className="text-[11px] sm:text-xs text-sky-200/90 mt-0.5 sm:mt-1 hidden xs:block">
+            Hỗ trợ cả tải ảnh từ máy điện thoại lẫn chèn link URL trực tiếp
           </p>
         </div>
 
-        {/* Form Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1">
+        {/* Form Body with smooth scrolling */}
+        <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-5">
           {isSuccess ? (
             <div className="py-8 text-center space-y-4 animate-in zoom-in-95 duration-200">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
 
-              <div className="space-y-2 max-w-md mx-auto">
-                <h4 className="text-xl font-black text-slate-900">
+              <div className="space-y-2 max-w-md mx-auto px-2">
+                <h4 className="text-lg sm:text-xl font-black text-slate-900">
                   Xuất Bản Bài Viết Thành Công!
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -242,13 +286,13 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
 
               <button
                 onClick={handleResetAndClose}
-                className="px-6 py-2.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
               >
                 Hoàn tất & Xem bài viết
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               
               {/* Tiêu đề */}
               <div className="space-y-1">
@@ -260,14 +304,14 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                   placeholder="VD: Cẩm nang dinh dưỡng và chăm sóc mèo con từ 1 đến 6 tháng tuổi"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                  className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
                 />
                 {formErrors.title && (
                   <p className="text-[11px] text-rose-500">{formErrors.title}</p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                 {/* Chuyên mục */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">
@@ -325,53 +369,117 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                   placeholder="Tóm tắt 1-2 câu quan trọng nhất của bài viết để hiển thị trên thẻ bài và mạng xã hội..."
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
                 />
                 {formErrors.summary && (
                   <p className="text-[11px] text-rose-500">{formErrors.summary}</p>
                 )}
               </div>
 
-              {/* PHẦN 1: Ảnh bìa đại diện của bài viết (Chèn bằng link URL) */}
-              <div className="space-y-3 p-4 bg-sky-50/50 rounded-2xl border border-sky-100">
-                <div className="flex items-center justify-between">
+              {/* PHẦN 1: ẢNH BÌA CHÍNH (UPLOAD HOẶC CHÈN LINK) */}
+              <div className="space-y-3 p-3.5 sm:p-4 bg-sky-50/60 rounded-2xl border border-sky-200/80">
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <label className="text-xs font-bold text-sky-950 flex items-center gap-1.5 uppercase tracking-wide">
                     <ImageIcon className="w-4 h-4 text-sky-600" />
-                    <span>Ảnh bìa chính của bài viết (Chèn bằng Link URL)</span>
+                    <span>Ảnh bìa đại diện bài viết</span>
                   </label>
-                  <span className="text-[11px] text-sky-700 font-medium">Bắt buộc</span>
-                </div>
 
-                <div className="relative flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="url"
-                      placeholder="Dán link ảnh bìa (VD: https://images.unsplash.com/... hoặc link ảnh bất kỳ)"
-                      value={coverImageUrl}
-                      onChange={(e) => setCoverImageUrl(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2.5 text-xs bg-white border border-sky-200 rounded-xl focus:outline-hidden focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
-                    />
-                    <Link className="w-4 h-4 text-sky-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    {coverImageUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setCoverImageUrl('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                        title="Xóa link ảnh"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                  {/* Switch between Upload or Insert Link */}
+                  <div className="inline-flex rounded-lg p-0.5 bg-sky-100 border border-sky-200 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setCoverSourceType('upload')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        coverSourceType === 'upload'
+                          ? 'bg-white text-sky-900 shadow-2xs font-bold'
+                          : 'text-sky-700 hover:text-sky-900'
+                      }`}
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Tải ảnh lên</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCoverSourceType('link')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        coverSourceType === 'link'
+                          ? 'bg-white text-sky-900 shadow-2xs font-bold'
+                          : 'text-sky-700 hover:text-sky-900'
+                      }`}
+                    >
+                      <Link className="w-3.5 h-3.5" />
+                      <span>Chèn Link URL</span>
+                    </button>
                   </div>
                 </div>
 
+                {/* Cover image input based on selected mode */}
+                {coverSourceType === 'upload' ? (
+                  <div className="space-y-2">
+                    <input
+                      ref={coverFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverFileUpload}
+                      className="hidden"
+                      id="cover-file-upload-input"
+                    />
+                    <label
+                      htmlFor="cover-file-upload-input"
+                      className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-sky-300 hover:border-sky-500 rounded-xl bg-white hover:bg-sky-50/50 transition-all cursor-pointer text-center group"
+                    >
+                      {isCoverUploading ? (
+                        <div className="flex items-center gap-2 text-sky-700 text-xs font-bold py-2">
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Đang tối ưu & nén ảnh...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                          <span className="text-xs font-bold text-sky-900">
+                            Chạm để chọn ảnh từ điện thoại / máy tính
+                          </span>
+                          <span className="text-[11px] text-slate-500 mt-0.5">
+                            Hỗ trợ JPG, PNG, WEBP (Tự động nén tối ưu hiển thị)
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                ) : (
+                  <div className="relative flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        placeholder="Dán liên kết ảnh bìa (VD: https://...)"
+                        value={coverImageUrl}
+                        onChange={(e) => setCoverImageUrl(e.target.value)}
+                        className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-sky-200 rounded-xl focus:outline-hidden focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
+                      />
+                      <Link className="w-4 h-4 text-sky-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      {coverImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setCoverImageUrl('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                          title="Xóa link ảnh"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Xem trước ảnh bìa */}
                 {coverImageUrl && (
-                  <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-sky-100">
+                  <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-sky-100 shadow-2xs">
                     <img 
                       src={coverImageUrl} 
                       alt="Xem trước ảnh bìa" 
-                      className="w-20 h-14 rounded-lg object-cover border border-slate-200 shrink-0"
+                      className="w-20 h-14 sm:w-24 sm:h-16 rounded-lg object-cover border border-slate-200 shrink-0"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = CLINIC_INFO.images.hero;
                       }}
@@ -379,10 +487,10 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                     <div className="flex-1 min-w-0 text-xs">
                       <div className="flex items-center gap-1 text-emerald-600 font-bold">
                         <Check className="w-3.5 h-3.5" />
-                        <span>Xem trước ảnh bìa đã chèn</span>
+                        <span>Ảnh bìa đã sẵn sàng</span>
                       </div>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                        {coverImageUrl}
+                        {coverImageUrl.startsWith('data:') ? 'Ảnh tải lên từ thiết bị' : coverImageUrl}
                       </p>
                     </div>
                   </div>
@@ -392,15 +500,18 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                 <div className="space-y-1.5 pt-1">
                   <div className="text-[11px] text-slate-600 font-semibold flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span>Hoặc chọn nhanh từ kho ảnh phòng khám:</span>
+                    <span>Hoặc chọn nhanh từ ảnh phòng khám:</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {sampleCoverImages.map((s, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setCoverImageUrl(s.url)}
-                        className={`text-left relative h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                        onClick={() => {
+                          setCoverImageUrl(s.url);
+                          setCoverSourceType('link');
+                        }}
+                        className={`text-left relative h-14 sm:h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                           coverImageUrl === s.url
                             ? 'border-sky-600 ring-2 ring-sky-300'
                             : 'border-slate-200 opacity-80 hover:opacity-100'
@@ -434,8 +545,8 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
 
                 <div className="space-y-2.5">
                   {contentParagraphs.map((para, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold flex items-center justify-center shrink-0 mt-2">
+                    <div key={idx} className="flex items-start gap-1.5 sm:gap-2">
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 text-slate-600 text-[10px] sm:text-[11px] font-bold flex items-center justify-center shrink-0 mt-2">
                         {idx + 1}
                       </span>
                       <textarea
@@ -443,13 +554,13 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                         placeholder={`Nội dung đoạn văn ${idx + 1}...`}
                         value={para}
                         onChange={(e) => handleParagraphChange(idx, e.target.value)}
-                        className="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                        className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
                       />
                       {contentParagraphs.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveParagraph(idx)}
-                          className="p-2 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer mt-1"
+                          className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer mt-1"
                           title="Xóa đoạn này"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -463,27 +574,38 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                 )}
               </div>
 
-              {/* PHẦN 2: CHÈN HÌNH ẢNH MINH HỌA BẰNG LINK VÀO BÀI VIẾT */}
-              <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              {/* PHẦN 2: CHÈN HÌNH ẢNH MINH HỌA (UPLOAD TỪ MÁY HOẶC CHÈN LINK) */}
+              <div className="space-y-3 p-3.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
                   <div>
                     <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
                       <Camera className="w-4 h-4 text-sky-600" />
-                      <span>Chèn thêm hình ảnh minh họa bằng Link (URL)</span>
+                      <span>Hình ảnh minh họa nội dung (Upload hoặc Link)</span>
                     </h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      Chèn nhiều ảnh minh họa vào giữa hoặc cuối bài viết kèm chú thích rõ ràng
+                      Chèn ảnh vào giữa bài viết hoặc cuối bài kèm chú thích chi tiết
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAddInlineImage()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Chèn thêm ảnh bằng link</span>
-                  </button>
+                  {/* Add action buttons: Upload or Link */}
+                  <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleAddInlineImage('upload')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-700 hover:bg-sky-800 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer transition-all"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>+ Tải ảnh lên</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddInlineImage('link')}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-100 text-sky-800 border border-sky-300 rounded-lg text-xs font-bold shadow-2xs cursor-pointer transition-all"
+                    >
+                      <Link className="w-3.5 h-3.5 text-sky-600" />
+                      <span>+ Chèn link</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Danh sách các ảnh đã chèn */}
@@ -493,16 +615,16 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                       <ImageIcon className="w-5 h-5" />
                     </div>
                     <p className="text-xs text-slate-600 font-medium">
-                      Chưa chèn thêm hình ảnh minh họa nào vào nội dung
+                      Chưa chèn hình ảnh minh họa nào. Bạn có thể tải ảnh từ điện thoại hoặc dán link ảnh.
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
-                      <span className="text-[11px] text-slate-500">Hoặc chèn thử nhanh link mẫu:</span>
+                      <span className="text-[11px] text-slate-500">Hoặc chọn nhanh mẫu:</span>
                       {presetInlineImageSuggestions.map((item, idx) => (
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => handleAddInlineImage({ url: item.url, caption: item.caption })}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors cursor-pointer"
+                          onClick={() => handleAddInlineImage('link', { url: item.url, caption: item.caption })}
+                          className="px-2 py-1 text-[11px] font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors cursor-pointer"
                         >
                           + {item.label}
                         </button>
@@ -514,7 +636,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                     {inlineImages.map((imgItem, index) => (
                       <div 
                         key={imgItem.id} 
-                        className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 shadow-2xs relative"
+                        className="p-3 sm:p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 shadow-2xs relative"
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -524,32 +646,84 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                             Ảnh minh họa {index + 1}
                           </span>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveInlineImage(imgItem.id)}
-                            className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
-                            title="Xóa ảnh này"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {/* Toggle source type for this specific item */}
+                            <div className="inline-flex rounded-md p-0.5 bg-slate-100 border border-slate-200 text-[10px]">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateInlineImage(imgItem.id, { sourceType: 'upload' })}
+                                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                                  imgItem.sourceType === 'upload'
+                                    ? 'bg-white text-sky-800 font-bold shadow-2xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                Tải file
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateInlineImage(imgItem.id, { sourceType: 'link' })}
+                                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                                  imgItem.sourceType === 'link'
+                                    ? 'bg-white text-sky-800 font-bold shadow-2xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                Dán link
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveInlineImage(imgItem.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                              title="Xóa ảnh này"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                          {/* Trường dán link URL */}
+                          {/* Input fields */}
                           <div className="sm:col-span-7 space-y-2">
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                                <Link className="w-3 h-3 text-sky-600" />
-                                <span>Đường link hình ảnh (URL) *</span>
-                              </label>
-                              <input
-                                type="url"
-                                placeholder="Dán link ảnh (https://...)"
-                                value={imgItem.url}
-                                onChange={(e) => handleUpdateInlineImage(imgItem.id, { url: e.target.value })}
-                                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-sky-500"
-                              />
-                            </div>
+                            {imgItem.sourceType === 'upload' ? (
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                  <Upload className="w-3 h-3 text-sky-600" />
+                                  <span>Chọn ảnh từ điện thoại / máy tính *</span>
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleInlineFileUpload(imgItem.id, f);
+                                  }}
+                                  className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
+                                />
+                                {imgItem.isUploading && (
+                                  <p className="text-[10px] text-sky-600 flex items-center gap-1 animate-pulse font-semibold">
+                                    <RefreshCw className="w-3 h-3 animate-spin" />
+                                    <span>Đang nén ảnh và tải lên...</span>
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                  <Link className="w-3 h-3 text-sky-600" />
+                                  <span>Đường link hình ảnh (URL) *</span>
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="Dán link ảnh (https://...)"
+                                  value={imgItem.url}
+                                  onChange={(e) => handleUpdateInlineImage(imgItem.id, { url: e.target.value })}
+                                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-sky-500"
+                                />
+                              </div>
+                            )}
 
                             <div className="space-y-1">
                               <label className="text-[11px] font-bold text-slate-700">
@@ -560,7 +734,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                                 placeholder="VD: Bác sĩ đang kiểm tra nhịp tim cho bé Poodle"
                                 value={imgItem.caption}
                                 onChange={(e) => handleUpdateInlineImage(imgItem.id, { caption: e.target.value })}
-                                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-sky-500"
+                                className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-sky-500"
                               />
                             </div>
 
@@ -584,7 +758,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                           </div>
 
                           {/* Preview ảnh thumbnail */}
-                          <div className="sm:col-span-5 flex flex-col justify-center items-center p-2 rounded-xl bg-slate-50 border border-slate-200/80 min-h-[110px]">
+                          <div className="sm:col-span-5 flex flex-col justify-center items-center p-2 rounded-xl bg-slate-50 border border-slate-200/80 min-h-[100px]">
                             {imgItem.url ? (
                               <div className="w-full space-y-1">
                                 <img
@@ -602,9 +776,11 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                                 )}
                               </div>
                             ) : (
-                              <div className="text-center text-slate-400 space-y-1 py-4">
+                              <div className="text-center text-slate-400 space-y-1 py-3">
                                 <ImageIcon className="w-6 h-6 mx-auto opacity-50" />
-                                <span className="text-[11px] block">Dán link ảnh để xem trước</span>
+                                <span className="text-[11px] block">
+                                  {imgItem.sourceType === 'upload' ? 'Chưa chọn file ảnh' : 'Dán link để xem trước'}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -631,7 +807,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={handleResetAndClose}
@@ -641,7 +817,7 @@ export const WriteArticleModal: React.FC<WriteArticleModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-6 py-2.5 bg-sky-700 hover:bg-sky-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-700/20 cursor-pointer transition-all"
+                  className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-sky-700 hover:bg-sky-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-700/20 cursor-pointer transition-all"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Xuất bản bài viết</span>

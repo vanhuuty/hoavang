@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, 
   Star, 
@@ -7,10 +7,14 @@ import {
   Send, 
   ShieldCheck, 
   AlertCircle,
-  Camera
+  Camera,
+  Upload,
+  Link,
+  RefreshCw
 } from 'lucide-react';
 import { DOCTORS_DATA, SERVICES_DATA } from '../data/clinicData';
 import { Review } from '../types';
+import { processImageFile } from '../utils/imageHelper';
 
 interface WriteReviewModalProps {
   isOpen: boolean;
@@ -35,7 +39,10 @@ export const WriteReviewModal: React.FC<WriteReviewModalProps> = ({
   const [doctorName, setDoctorName] = useState(DOCTORS_DATA[0].name);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [photoSourceType, setPhotoSourceType] = useState<'upload' | 'link'>('upload');
   const [petPhotoUrl, setPetPhotoUrl] = useState('');
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
@@ -370,42 +377,127 @@ export const WriteReviewModal: React.FC<WriteReviewModalProps> = ({
                   )}
                 </div>
 
-                {/* Optional Photo Attachment */}
-                <div className="space-y-1.5 pt-1">
-                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-sky-600" />
-                    <span>Hình ảnh bé cưng sau khi điều trị / làm đẹp (tùy chọn)</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="url"
-                      placeholder="Dán liên kết ảnh hoặc chọn ảnh mẫu bên dưới..."
-                      value={petPhotoUrl}
-                      onChange={(e) => setPetPhotoUrl(e.target.value)}
-                      className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
-                    />
+                {/* Optional Photo Attachment with Upload / Link options */}
+                <div className="space-y-2 pt-1 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Hình ảnh bé cưng (Upload hoặc Link)</span>
+                    </label>
+
+                    <div className="inline-flex rounded-lg p-0.5 bg-slate-200/80 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setPhotoSourceType('upload')}
+                        className={`px-2 py-0.5 rounded cursor-pointer transition-all ${
+                          photoSourceType === 'upload' ? 'bg-white text-sky-900 font-bold shadow-2xs' : 'text-slate-600'
+                        }`}
+                      >
+                        Tải ảnh lên
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoSourceType('link')}
+                        className={`px-2 py-0.5 rounded cursor-pointer transition-all ${
+                          photoSourceType === 'link' ? 'bg-white text-sky-900 font-bold shadow-2xs' : 'text-slate-600'
+                        }`}
+                      >
+                        Dán link
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 pt-1 text-[11px]">
-                    <span className="text-slate-400">Chọn ảnh mẫu nhanh:</span>
+
+                  {photoSourceType === 'upload' ? (
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="review-photo-upload"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            setIsPhotoUploading(true);
+                            const dataUrl = await processImageFile(file, 800, 600, 0.82);
+                            setPetPhotoUrl(dataUrl);
+                          } catch (err: any) {
+                            alert(err.message || 'Lỗi tải ảnh');
+                          } finally {
+                            setIsPhotoUploading(false);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="review-photo-upload"
+                        className="flex items-center justify-center gap-2 p-3 border border-dashed border-sky-300 hover:border-sky-500 rounded-xl bg-white hover:bg-sky-50/50 cursor-pointer text-xs text-sky-800 font-semibold transition-colors"
+                      >
+                        {isPhotoUploading ? (
+                          <span className="flex items-center gap-1.5 text-sky-600">
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Đang nén và tải ảnh...</span>
+                          </span>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-sky-600" />
+                            <span>Chọn ảnh chụp bé từ điện thoại / máy tính</span>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        placeholder="Dán liên kết ảnh (https://...)"
+                        value={petPhotoUrl}
+                        onChange={(e) => setPetPhotoUrl(e.target.value)}
+                        className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:border-sky-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* Thumbnail Preview */}
+                  {petPhotoUrl && (
+                    <div className="flex items-center gap-3 p-2 bg-white rounded-lg border border-slate-200">
+                      <img
+                        src={petPhotoUrl}
+                        alt="Xem trước ảnh bé"
+                        className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
+                      />
+                      <div className="flex-1 min-w-0 text-xs">
+                        <span className="font-bold text-emerald-600 block">✓ Ảnh đã chọn thành công</span>
+                        <span className="text-[11px] text-slate-400 truncate block">
+                          {petPhotoUrl.startsWith('data:') ? 'Ảnh tải lên từ máy' : petPhotoUrl}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPetPhotoUrl('')}
+                        className="text-xs text-rose-500 hover:text-rose-700 font-semibold cursor-pointer px-2 py-1"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                    <span className="text-slate-400">Ảnh mẫu gợi ý:</span>
                     {samplePetPhotos.map((p, idx) => (
                       <button
                         type="button"
                         key={idx}
-                        onClick={() => setPetPhotoUrl(p.url)}
+                        onClick={() => {
+                          setPetPhotoUrl(p.url);
+                          setPhotoSourceType('link');
+                        }}
                         className="text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-md border border-sky-200 transition-colors cursor-pointer"
                       >
                         {p.label}
                       </button>
                     ))}
-                    {petPhotoUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setPetPhotoUrl('')}
-                        className="text-rose-600 hover:text-rose-800 ml-1 cursor-pointer"
-                      >
-                        Xóa ảnh [✕]
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

@@ -35,7 +35,9 @@ import {
   Clock, 
   FileText,
   Search,
-  X
+  X,
+  PenTool,
+  MessageSquare
 } from 'lucide-react';
 
 export default function App() {
@@ -778,6 +780,43 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Mobile Sticky Quick Action Bar (Tối ưu hóa điều hướng & thao tác nhanh trên điện thoại) */}
+      <aside aria-label="Điều hướng nhanh điện thoại" className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 shadow-lg flex items-center justify-around gap-1 safe-area-pb">
+        <a 
+          href={`tel:${CLINIC_INFO.hotline.replace(/\s+/g, '')}`}
+          className="flex flex-col items-center justify-center py-1 px-2 text-sky-700 hover:text-sky-900 transition-colors"
+        >
+          <PhoneCall className="w-5 h-5 text-sky-600 animate-pulse" />
+          <span className="text-[10px] font-bold mt-0.5">Gọi Hotline</span>
+        </a>
+
+        <button
+          onClick={() => handleOpenBooking()}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-700 active:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-md shadow-sky-700/25 cursor-pointer"
+        >
+          <Calendar className="w-4 h-4 text-amber-300" />
+          <span>Đặt khám</span>
+        </button>
+
+        <button
+          onClick={() => setIsWriteArticleOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-2 text-slate-700 hover:text-sky-700 transition-colors cursor-pointer"
+          title="Viết bài mới"
+        >
+          <PenTool className="w-5 h-5 text-sky-600" />
+          <span className="text-[10px] font-bold mt-0.5">Viết bài</span>
+        </button>
+
+        <button
+          onClick={() => setIsMapOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-2 text-slate-700 hover:text-sky-700 transition-colors cursor-pointer"
+          title="Chỉ đường"
+        >
+          <MapPin className="w-5 h-5 text-amber-600" />
+          <span className="text-[10px] font-bold mt-0.5">Chỉ đường</span>
+        </button>
+      </aside>
 
       {/* Footer */}
       <Footer onNavClick={(tab) => {
