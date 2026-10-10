@@ -9,6 +9,7 @@ import { NewsSection } from './components/NewsSection';
 import { ContactSidebar } from './components/ContactSidebar';
 import { TestimonialsSection } from './components/TestimonialsSection';
 import { PricingSection } from './components/PricingSection';
+import { ReviewsSection } from './components/ReviewsSection';
 import { Footer } from './components/Footer';
 
 // Modals
@@ -18,9 +19,11 @@ import { ServiceDetailModal } from './components/ServiceDetailModal';
 import { ArticleModal } from './components/ArticleModal';
 import { AppointmentLookupModal } from './components/AppointmentLookupModal';
 import { MapModal } from './components/MapModal';
+import { WriteReviewModal } from './components/WriteReviewModal';
+import { WriteArticleModal } from './components/WriteArticleModal';
 
-import { CLINIC_INFO, DOCTORS_DATA, SERVICES_DATA, ARTICLES_DATA } from './data/clinicData';
-import { Doctor, ServiceItem, Article, Appointment } from './types';
+import { CLINIC_INFO, DOCTORS_DATA, SERVICES_DATA, ARTICLES_DATA, INITIAL_REVIEWS_DATA } from './data/clinicData';
+import { Doctor, ServiceItem, Article, Appointment, Review } from './types';
 import { 
   PhoneCall, 
   Calendar, 
@@ -52,6 +55,45 @@ export default function App() {
   const [bookingPreServiceId, setBookingPreServiceId] = useState<string | undefined>(undefined);
   const [bookingPreDoctorId, setBookingPreDoctorId] = useState<string | undefined>(undefined);
 
+  // Reviews & Moderation State
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    try {
+      const stored = localStorage.getItem('hoavang_vet_reviews');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_REVIEWS_DATA;
+  });
+  const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
+
+  // Articles & Authoring State
+  const [articles, setArticles] = useState<Article[]>(() => {
+    try {
+      const stored = localStorage.getItem('hoavang_vet_articles');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return ARTICLES_DATA;
+  });
+  const [isWriteArticleOpen, setIsWriteArticleOpen] = useState(false);
+
+  const handleCreateArticle = (newArticle: Article) => {
+    const updated = [newArticle, ...articles];
+    setArticles(updated);
+    try {
+      localStorage.setItem('hoavang_vet_articles', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast(`Đã xuất bản bài viết "${newArticle.title}" thành công!`);
+  };
+
   // Toast notification for user actions
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -60,6 +102,72 @@ export default function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
+  };
+
+  const handleCreateReview = (newReview: Review) => {
+    const updated = [newReview, ...reviews];
+    setReviews(updated);
+    try {
+      localStorage.setItem('hoavang_vet_reviews', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast('Đánh giá của bạn đã được gửi và đang chờ ban quản trị kiểm duyệt công khai. Cảm ơn bạn!');
+  };
+
+  const handleApproveReview = (reviewId: string) => {
+    const updated = reviews.map(r => r.id === reviewId ? { ...r, status: 'approved' as const } : r);
+    setReviews(updated);
+    try {
+      localStorage.setItem('hoavang_vet_reviews', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast('Đã phê duyệt đánh giá công khai trên website!');
+  };
+
+  const handleRejectReview = (reviewId: string, reason?: string) => {
+    const updated = reviews.map(r => r.id === reviewId ? { ...r, status: 'rejected' as const, rejectionReason: reason } : r);
+    setReviews(updated);
+    try {
+      localStorage.setItem('hoavang_vet_reviews', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast('Đã từ chối hiển thị đánh giá.');
+  };
+
+  const handleReplyReview = (reviewId: string, replyText: string, authorName: string) => {
+    const updated = reviews.map(r => {
+      if (r.id === reviewId) {
+        return {
+          ...r,
+          clinicResponse: {
+            author: authorName,
+            content: replyText,
+            date: new Date().toLocaleDateString('vi-VN')
+          }
+        };
+      }
+      return r;
+    });
+    setReviews(updated);
+    try {
+      localStorage.setItem('hoavang_vet_reviews', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast('Đã lưu và hiển thị phản hồi chính thức từ phòng khám!');
+  };
+
+  const handleLikeReview = (reviewId: string) => {
+    const updated = reviews.map(r => r.id === reviewId ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 } : r);
+    setReviews(updated);
+    try {
+      localStorage.setItem('hoavang_vet_reviews', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleOpenBooking = (serviceId?: string, doctorId?: string) => {
@@ -81,7 +189,7 @@ export default function App() {
   // Search results matching search query
   const searchResults = searchQuery.trim()
     ? {
-        articles: ARTICLES_DATA.filter(a => 
+        articles: articles.filter(a => 
           a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           a.summary.toLowerCase().includes(searchQuery.toLowerCase())
         ),
@@ -130,6 +238,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenBooking={() => handleOpenBooking()}
         onOpenLookup={() => setIsLookupOpen(true)}
+        onOpenWriteArticle={() => setIsWriteArticleOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
@@ -323,12 +432,21 @@ export default function App() {
 
                   {/* 4. Featured News List matching Mockup */}
                   <NewsSection
+                    articles={articles}
                     onSelectArticle={(article) => setSelectedArticle(article)}
+                    onOpenWriteArticle={() => setIsWriteArticleOpen(true)}
                     isFullPage={false}
                   />
 
                   {/* 5. Testimonial Quote Card matching Mockup */}
-                  <TestimonialsSection />
+                  <TestimonialsSection
+                    approvedReviews={reviews.filter(r => r.status === 'approved')}
+                    onOpenWriteReview={() => setIsWriteReviewOpen(true)}
+                    onViewAllReviews={() => {
+                      setActiveTab('reviews');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
                 </div>
 
                 {/* Right 4 Columns (Contact Sidebar matching Mockup) */}
@@ -508,15 +626,29 @@ export default function App() {
             </div>
 
             <NewsSection
+              articles={articles}
               onSelectArticle={(article) => setSelectedArticle(article)}
+              onOpenWriteArticle={() => setIsWriteArticleOpen(true)}
               isFullPage={true}
             />
           </div>
         )}
 
-        {/* VIEW 6: BẢNG GIÁ (PRICING) */}
+        {/* VIEW: BẢNG GIÁ (PRICING) */}
         {activeTab === 'pricing' && (
           <PricingSection onOpenBooking={() => handleOpenBooking()} />
+        )}
+
+        {/* VIEW: ĐÁNH GIÁ & NHẬN XÉT (REVIEWS & MODERATION) */}
+        {activeTab === 'reviews' && (
+          <ReviewsSection
+            reviews={reviews}
+            onOpenWriteReview={() => setIsWriteReviewOpen(true)}
+            onApproveReview={handleApproveReview}
+            onRejectReview={handleRejectReview}
+            onReplyReview={handleReplyReview}
+            onLikeReview={handleLikeReview}
+          />
         )}
 
         {/* VIEW 7: LIÊN HỆ & BẢN ĐỒ (CONTACT) */}
@@ -689,6 +821,20 @@ export default function App() {
       <MapModal
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
+      />
+
+      {/* 7. Write Customer Review Modal */}
+      <WriteReviewModal
+        isOpen={isWriteReviewOpen}
+        onClose={() => setIsWriteReviewOpen(false)}
+        onSubmitReview={handleCreateReview}
+      />
+
+      {/* 8. Write & Publish News Article Module */}
+      <WriteArticleModal
+        isOpen={isWriteArticleOpen}
+        onClose={() => setIsWriteArticleOpen(false)}
+        onSubmitArticle={handleCreateArticle}
       />
 
     </div>

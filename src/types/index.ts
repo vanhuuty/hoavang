@@ -42,6 +42,7 @@ export interface Article {
   views: number;
   image: string;
   tags: string[];
+  inlineImages?: { url: string; caption?: string; position?: number }[];
 }
 
 export interface Appointment {
@@ -74,4 +75,30 @@ export interface Testimonial {
   rating: number;
   serviceUsed: string;
   date: string;
+}
+
+export interface Review {
+  id: string;
+  customerName: string;
+  phoneNumber?: string;
+  bookingCode?: string;
+  location?: string;
+  petName: string;
+  petType: 'Chó' | 'Mèo' | 'Khác';
+  serviceUsed: string;
+  doctorName?: string;
+  rating: number;
+  title?: string;
+  content: string;
+  petPhotoUrl?: string;
+  date: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  clinicResponse?: {
+    author: string;
+    content: string;
+    date: string;
+  };
+  helpfulCount: number;
+  verified: boolean;
 }

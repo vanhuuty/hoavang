@@ -1,17 +1,17 @@
-import { Doctor, ServiceItem, Article, Testimonial } from '../types';
+import { Doctor, ServiceItem, Article, Testimonial, Review } from '../types';
 
 export const CLINIC_INFO = {
   name: 'Phòng khám thú y HÒA VANG',
   slogan: 'Vì sức khỏe thú cưng của bạn',
   subSlogan: 'Tận tâm – Chuyên nghiệp – Đồng hành cùng thú cưng',
-  address: 'Thôn Phú Sơn, Hòa Phú, Huyện Hòa Vang, TP. Đà Nẵng',
+  address: 'Đường Phan Quang Định, Phường Hòa Khánh, TP. Đà Nẵng',
   hotline: '0935 77 87 27',
   zalo: '0935778727',
   emergencyHotline: '0935 77 87 27',
   email: 'phongkhamthuyhoavang@gmail.com',
   workingHours: '7:00 - 19:00 (Tất cả các ngày trong tuần)',
   emergencyService: 'Cấp cứu 24/7 khi gọi hotline',
-  googleMapsUrl: 'https://maps.google.com/?q=Hòa+Phú,+Hòa+Vang,+Đà+Nẵng',
+  googleMapsUrl: 'https://maps.google.com/?q=Đường+Phan+Quang+Định,+Hòa+Khánh,+Đà+Nẵng',
   facebookUrl: 'https://facebook.com',
   stats: {
     yearsExperience: '10+',
@@ -217,7 +217,19 @@ export const ARTICLES_DATA: Article[] = [
     readTime: '4 phút đọc',
     views: 1420,
     image: CLINIC_INFO.images.hero,
-    tags: ['Chăm sóc mùa hè', 'Sốc nhiệt', 'Chó mèo', 'Hòa Vang']
+    tags: ['Chăm sóc mùa hè', 'Sốc nhiệt', 'Chó mèo', 'Hòa Vang'],
+    inlineImages: [
+      {
+        url: CLINIC_INFO.images.doctorMale,
+        caption: 'Bác sĩ thú y kiểm tra dấu hiệu sinh tồn và nhiệt độ cơ thể của cún cưng',
+        position: 1
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1000&q=80',
+        caption: 'Cho thú cưng uống đủ nước sạch và nghỉ ngơi nơi thoáng mát để phòng tránh sốc nhiệt',
+        position: 2
+      }
+    ]
   },
   {
     id: 'bai-viet-2',
@@ -327,5 +339,140 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
     rating: 5,
     serviceUsed: 'Tiêm phòng trọn gói & Siêu âm',
     date: '15/05/2025'
+  }
+];
+
+export const INITIAL_REVIEWS_DATA: Review[] = [
+  {
+    id: 'rev-1',
+    customerName: 'Chị Nguyễn Thị Lan',
+    phoneNumber: '0935123456',
+    bookingCode: 'HV-2026-9812',
+    location: 'Xã Hòa Nhơn, Huyện Hòa Vang',
+    petName: 'Milo',
+    petType: 'Chó',
+    serviceUsed: 'Khám & Điều trị da liễu',
+    doctorName: 'BS. Lê Minh Trí',
+    rating: 5,
+    title: 'Bác sĩ Trí chữa nấm và viêm da cho bé Milo rất mát tay!',
+    content: 'Bé Milo nhà mình bị viêm da ngứa ngáy rụng lông suốt 2 tháng đưa đi mấy nơi không đỡ. Đến thú y Hòa Vang được bác sĩ Trí xét nghiệm soi tươi nấm, kê đơn kết hợp dầu tắm thảo dược. Sau 2 tuần bé đã mọc lông non mượt trở lại. Chi phí rất minh bạch, phòng khám sạch sẽ và không hề có mùi hôi.',
+    petPhotoUrl: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80',
+    date: '15/06/2025',
+    status: 'approved',
+    clinicResponse: {
+      author: 'BS. Lê Minh Trí',
+      content: 'Cảm ơn chị Lan đã tin tưởng và kiên trì tắm thuốc đúng cữ cho bé Milo. Chúc bé luôn khỏe mạnh và năng động nhé ạ!',
+      date: '16/06/2025'
+    },
+    helpfulCount: 24,
+    verified: true
+  },
+  {
+    id: 'rev-2',
+    customerName: 'Anh Trần Minh Tuấn',
+    phoneNumber: '0905987654',
+    bookingCode: 'HV-2026-4421',
+    location: 'Xã Hòa Phú, Huyện Hòa Vang',
+    petName: 'Max',
+    petType: 'Chó',
+    serviceUsed: 'Phẫu thuật ngoại khoa nẹp xương',
+    doctorName: 'BS. CKI. Nguyễn Văn Hùng',
+    rating: 5,
+    title: 'Ca mổ nẹp xương thành công ngoài mong đợi, phục hồi rất nhanh',
+    content: 'Bé Golden Max 30kg nhà mình không may bị tai nạn gãy xương đùi. May mắn có BS Hùng tiếp nhận cấp cứu và phẫu thuật nẹp xương ngay trong đêm. Máy gây mê khí dung hiện đại nên bé tỉnh táo nhanh sau mổ, đường khâu thẩm mỹ rất đẹp. Sau 1 tháng tái khám xương đã liền thẳng tắp.',
+    petPhotoUrl: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80',
+    date: '02/06/2025',
+    status: 'approved',
+    clinicResponse: {
+      author: 'BS. CKI. Nguyễn Văn Hùng',
+      content: 'Chào anh Tuấn! Bé Max rất dũng cảm và ngoan ngoãn trong suốt quá trình điều trị. Anh nhớ cho bé vận động nhẹ nhàng thêm 2 tuần nữa trước khi chạy nhảy bình thường nhé!',
+      date: '03/06/2025'
+    },
+    helpfulCount: 38,
+    verified: true
+  },
+  {
+    id: 'rev-3',
+    customerName: 'Cô Lê Hoàng Yến',
+    phoneNumber: '0914654321',
+    bookingCode: 'HV-2026-6178',
+    location: 'Xã Hòa Khương, Huyện Hòa Vang',
+    petName: 'Bông & Miu',
+    petType: 'Mèo',
+    serviceUsed: 'Tiêm phòng Vaccine & Siêu âm',
+    doctorName: 'BS. ThS. Trần Thu Hà',
+    rating: 5,
+    title: 'Bác sĩ Hà rất dịu dàng, mèo nhát người cũng nằm ngoan cho khám',
+    content: 'Hai bé mèo nhà cô rất nhút nhát và sợ chỗ đông người. Nhưng bác sĩ Hà thao tác nhẹ nhàng, vuốt ve làm dịu tâm lý trước khi tiêm nên các bé không hề kêu la hay cào cấu. Vaccine có tem bảo đảm chính hãng, dán vào sổ tiêm rõ ràng. Đặt lịch trên web đến đúng giờ là được vào khám ngay, tiện lợi vô cùng!',
+    petPhotoUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80',
+    date: '20/05/2025',
+    status: 'approved',
+    clinicResponse: {
+      author: 'BS. ThS. Trần Thu Hà',
+      content: 'Cháu cảm ơn cô Yến ạ! Hai bé Bông và Miu xinh xắn và đáng yêu lắm. Lần tới đến hạn tiêm nhắc lại dại hệ thống sẽ tự động gửi thông báo nhắc cô nhé!',
+      date: '21/05/2025'
+    },
+    helpfulCount: 19,
+    verified: true
+  },
+  {
+    id: 'rev-4',
+    customerName: 'Bác Đặng Quốc Bảo',
+    phoneNumber: '0978334455',
+    bookingCode: 'HV-2026-1102',
+    location: 'Xã Hòa Ninh, Huyện Hòa Vang',
+    petName: 'Rocky',
+    petType: 'Chó',
+    serviceUsed: 'Cấp cứu & Khám bệnh',
+    doctorName: 'BS. CKI. Nguyễn Văn Hùng',
+    rating: 5,
+    title: 'Cứu sống bé Rocky bị ngộ độc kịp thời trong đêm',
+    content: 'Bé Rocky vô tình ăn phải bả lạ trong vườn, nôn mửa liên tục và co giật lúc 21h đêm. Gia đình gọi hotline phòng khám được bác sĩ hướng dẫn sơ cứu nhanh rồi đưa gấp đến cơ sở. Các bác sĩ đã truyền giải độc, rửa dạ dày kịp thời cứu sống bé. Gia đình biết ơn đội ngũ y bác sĩ Hòa Vang rất nhiều!',
+    date: '12/05/2025',
+    status: 'approved',
+    clinicResponse: {
+      author: 'Ban Quản Trị Phòng Khám',
+      content: 'Phòng khám Thú y Hòa Vang luôn duy trì trực cấp cứu 24/7 để đồng hành cùng các bé. Rất mừng vì bé Rocky đã vượt qua nguy hiểm an toàn!',
+      date: '13/05/2025'
+    },
+    helpfulCount: 42,
+    verified: true
+  },
+  {
+    id: 'rev-5-pending',
+    customerName: 'Anh Huỳnh Văn Nam',
+    phoneNumber: '0935889900',
+    bookingCode: 'HV-2026-8820',
+    location: 'Xã Hòa Tiến, Huyện Hòa Vang',
+    petName: 'Bắp',
+    petType: 'Chó',
+    serviceUsed: 'Spa & Cắt tỉa lông làm đẹp',
+    doctorName: 'BS. Phạm Hoàng Anh',
+    rating: 5,
+    title: 'Dịch vụ Spa tắm tỉa cực kỳ chuyên nghiệp và thơm lâu',
+    content: 'Bé Corgi nhà mình đi spa về thơm phức, cắt tỉa mông trái tim cưng xỉu! Các bạn kỹ thuật viên rất kiên nhẫn, không ép buộc bé. Sau khi tắm còn được vệ sinh tai và mài móng sạch sẽ. Sẽ tiếp tục ủng hộ phòng khám thường xuyên.',
+    petPhotoUrl: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=400&q=80',
+    date: '08/10/2026',
+    status: 'pending',
+    helpfulCount: 0,
+    verified: true
+  },
+  {
+    id: 'rev-6-pending',
+    customerName: 'Chị Phan Thùy Trang',
+    phoneNumber: '0905112233',
+    bookingCode: 'HV-2026-7734',
+    location: 'Xã Hòa Sơn, Huyện Hòa Vang',
+    petName: 'Mun',
+    petType: 'Mèo',
+    serviceUsed: 'Phẫu thuật ngoại khoa triệt sản',
+    doctorName: 'BS. ThS. Trần Thu Hà',
+    rating: 5,
+    title: 'Triệt sản mèo cái đường mổ siêu nhỏ, hồi phục ngay trong ngày',
+    content: 'Mình rất lo lắng khi cho bé Mun đi triệt sản vì sợ bé đau. Nhưng bác sĩ Hà mổ khéo léo vô cùng, đường mổ chỉ khoảng 1.5cm, khâu chỉ tự tiêu giấu bên trong nên không phải đeo loa chống liếm quá lâu. Chiều đón về bé đã ăn uống bình thường. Rất an tâm!',
+    date: '09/10/2026',
+    status: 'pending',
+    helpfulCount: 0,
+    verified: true
   }
 ];

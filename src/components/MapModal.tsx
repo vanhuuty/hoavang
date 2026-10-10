@@ -65,8 +65,8 @@ export const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose }) => {
               Hướng dẫn di chuyển thuận tiện:
             </h4>
             <ul className="list-disc pl-4 space-y-1 text-slate-600">
-              <li>Từ trung tâm TP. Đà Nẵng: Đi theo tuyến Quốc lộ 14B về hướng Hòa Vang, rẽ vào đường liên xã Hòa Phú (Thôn Phú Sơn).</li>
-              <li>Phòng khám nằm ngay mặt đường chính rộng rãi, có bãi đậu xe ô tô và xe máy rộng rãi, an toàn cho thú cưng.</li>
+              <li>Từ trung tâm TP. Đà Nẵng: Đi theo trục đường Điện Biên Phủ hoặc Tôn Đức Thắng đến khu vực Hòa Khánh, rẽ vào đường Phan Quang Định.</li>
+              <li>Phòng khám nằm tại mặt tiền đường Phan Quang Định, phường Hòa Khánh, Đà Nẵng, có chỗ đậu xe ô tô và xe máy rộng rãi, an toàn cho thú cưng.</li>
               <li>Nếu quý khách gặp khó khăn khi tìm đường, hãy gọi trực tiếp số <strong>{CLINIC_INFO.hotline}</strong> để nhân viên hướng dẫn chi tiết.</li>
             </ul>
           </div>

@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { Newspaper, Calendar, Clock, ArrowRight, Search, Eye } from 'lucide-react';
+import { Newspaper, Calendar, Clock, ArrowRight, Search, Eye, PenTool, Plus } from 'lucide-react';
 import { ARTICLES_DATA } from '../data/clinicData';
 import { Article } from '../types';
 
 interface NewsSectionProps {
   onSelectArticle: (article: Article) => void;
+  articles?: Article[];
+  onOpenWriteArticle?: () => void;
   isFullPage?: boolean;
 }
 
 export const NewsSection: React.FC<NewsSectionProps> = ({
   onSelectArticle,
+  articles = ARTICLES_DATA,
+  onOpenWriteArticle,
   isFullPage = false
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -23,7 +27,9 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
     { id: 'Sức khỏe & Bệnh lý', label: 'Bệnh lý & Sức khỏe' },
   ];
 
-  const filteredArticles = ARTICLES_DATA.filter((item) => {
+  const sourceArticles = articles && articles.length > 0 ? articles : ARTICLES_DATA;
+
+  const filteredArticles = sourceArticles.filter((item) => {
     const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
     const matchSearch = 
       item.title.toLowerCase().includes(newsSearch.toLowerCase()) ||
@@ -31,28 +37,43 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
     return matchCat && matchSearch;
   });
 
-  const displayList = isFullPage ? filteredArticles : ARTICLES_DATA.slice(0, 4);
+  const displayList = isFullPage ? filteredArticles : filteredArticles.slice(0, 4);
 
   return (
     <div className="space-y-4">
       {/* Header matching mockup */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2 text-sky-900">
           <Newspaper className="w-5 h-5 text-sky-600" />
           <h2 className="text-xl font-black tracking-tight text-slate-900">
             Tin tức nổi bật
           </h2>
+          <span className="text-xs text-slate-400 font-semibold">({sourceArticles.length} bài)</span>
         </div>
 
-        {!isFullPage && (
-          <button
-            onClick={() => onSelectArticle(ARTICLES_DATA[0])}
-            className="text-xs font-bold text-sky-700 hover:text-sky-800 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <span>Xem tất cả</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Write Article Module Button */}
+          {onOpenWriteArticle && (
+            <button
+              onClick={onOpenWriteArticle}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+              title="Mở module biên tập tin tức"
+            >
+              <PenTool className="w-3.5 h-3.5 text-amber-300" />
+              <span>Viết bài mới</span>
+            </button>
+          )}
+
+          {!isFullPage && sourceArticles.length > 0 && (
+            <button
+              onClick={() => onSelectArticle(sourceArticles[0])}
+              className="text-xs font-bold text-sky-700 hover:text-sky-800 flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <span>Xem tất cả</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter and search bar when viewing full news page */}
@@ -101,8 +122,16 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
                 src={article.image}
                 alt={article.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/src/assets/images/hero_vet_clinic_animals_1791617072923.jpg';
+                }}
                 referrerPolicy="no-referrer"
               />
+              {article.inlineImages && article.inlineImages.length > 0 && (
+                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1 py-0.5 rounded font-bold flex items-center gap-0.5 backdrop-blur-xs">
+                  <span>+{article.inlineImages.length} ảnh</span>
+                </div>
+              )}
             </div>
 
             {/* Article Meta & Title */}
@@ -120,9 +149,18 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
                 <span className="text-sky-700 font-medium bg-sky-50/80 px-2 py-0.5 rounded-md border border-sky-100 text-[10px]">
                   {article.category}
                 </span>
+                {article.inlineImages && article.inlineImages.length > 0 && (
+                  <span className="text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">
+                    Có ảnh minh họa
+                  </span>
+                )}
                 <span className="hidden sm:inline text-slate-300">·</span>
                 <span className="hidden sm:inline text-slate-400">
                   {article.readTime}
+                </span>
+                <span className="hidden sm:inline text-slate-300">·</span>
+                <span className="hidden sm:inline text-slate-500 font-medium">
+                  {article.authorName}
                 </span>
               </div>
             </div>
@@ -130,8 +168,16 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
         ))}
 
         {displayList.length === 0 && (
-          <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
-            Không tìm thấy bài viết nào phù hợp. Vui lòng thử tìm từ khóa khác.
+          <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+            <p>Không tìm thấy bài viết nào phù hợp.</p>
+            {onOpenWriteArticle && (
+              <button
+                onClick={onOpenWriteArticle}
+                className="px-4 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold"
+              >
+                Viết bài viết mới ngay
+              </button>
+            )}
           </div>
         )}
       </div>

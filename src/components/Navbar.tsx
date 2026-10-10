@@ -11,7 +11,8 @@ import {
   UserCheck, 
   Newspaper, 
   Info,
-  SearchCode
+  SearchCode,
+  PenTool
 } from 'lucide-react';
 import { CLINIC_INFO } from '../data/clinicData';
 
@@ -20,6 +21,7 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   onOpenBooking: () => void;
   onOpenLookup: () => void;
+  onOpenWriteArticle?: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   onOpenBooking,
   onOpenLookup,
+  onOpenWriteArticle,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -132,6 +135,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {item.label}
               </button>
             ))}
+
+            {/* Nút Viết bài mới trực tiếp trong menu */}
+            {onOpenWriteArticle && (
+              <button
+                onClick={onOpenWriteArticle}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-bold text-sky-700 bg-sky-50/90 hover:bg-sky-700 hover:text-white border border-sky-200 hover:border-sky-700 transition-all whitespace-nowrap cursor-pointer shadow-2xs group ml-1"
+                title="Mở module biên tập tin tức mới"
+              >
+                <PenTool className="w-4 h-4 text-sky-600 group-hover:text-white transition-colors" />
+                <span>Viết bài mới</span>
+              </button>
+            )}
           </nav>
 
           {/* Search bar & CTA button */}
@@ -239,6 +254,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <SearchCode className="w-4 h-4 text-sky-700" />
               Tra cứu lịch hẹn
             </button>
+            {onOpenWriteArticle && (
+              <button
+                onClick={() => { onOpenWriteArticle(); setMobileMenuOpen(false); }}
+                className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-lg text-xs font-bold"
+              >
+                <PenTool className="w-4 h-4 text-sky-600" />
+                Viết & Đăng bài mới
+              </button>
+            )}
           </div>
 
           <nav className="flex flex-col space-y-1 pt-1">
@@ -255,6 +279,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {item.label}
               </button>
             ))}
+
+            {/* Menu item Viết bài mới trong menu */}
+            {onOpenWriteArticle && (
+              <button
+                onClick={() => {
+                  onOpenWriteArticle();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-between text-left px-3.5 py-2.5 rounded-lg text-sm font-bold text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <PenTool className="w-4 h-4 text-sky-600" />
+                  <span>Viết bài mới</span>
+                </div>
+                <span className="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                  Đăng tin
+                </span>
+              </button>
+            )}
           </nav>
 
           <div className="pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">

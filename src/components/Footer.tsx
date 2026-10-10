@@ -17,6 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavClick }) => {
     { id: 'services', label: 'Dịch vụ' },
     { id: 'doctors', label: 'Bác sĩ' },
     { id: 'news', label: 'Tin tức' },
+    { id: 'reviews', label: 'Đánh giá' },
     { id: 'pricing', label: 'Bảng giá' },
     { id: 'contact', label: 'Liên hệ' },
   ];
