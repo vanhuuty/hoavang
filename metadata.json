@@ -1,0 +1,6 @@
+{
+  "name": "Phòng Khám Thú Y Hòa Vang",
+  "description": "Website tin tức, giới thiệu, đặt lịch khám trực tuyến và hồ sơ bác sĩ Phòng Khám Thú Y Hòa Vang Đà Nẵng",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
