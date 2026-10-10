@@ -1,4 +1,8 @@
 import { Doctor, ServiceItem, Article, Testimonial, Review } from '../types';
+import heroImg from '../assets/images/hero_vet_clinic_animals_1791617072923.jpg';
+import storefrontImg from '../assets/images/clinic_storefront_hoavang_1791617084363.jpg';
+import doctorMaleImg from '../assets/images/vet_doctor_male_puppy_1791617094974.jpg';
+import doctorFemaleImg from '../assets/images/vet_doctor_female_cat_1791617109445.jpg';
 
 export const CLINIC_INFO = {
   name: 'Phòng khám thú y HÒA VANG',
@@ -20,10 +24,10 @@ export const CLINIC_INFO = {
     satisfactionRate: '99%',
   },
   images: {
-    hero: '/src/assets/images/hero_vet_clinic_animals_1791617072923.jpg',
-    storefront: '/src/assets/images/clinic_storefront_hoavang_1791617084363.jpg',
-    doctorMale: '/src/assets/images/vet_doctor_male_puppy_1791617094974.jpg',
-    doctorFemale: '/src/assets/images/vet_doctor_female_cat_1791617109445.jpg',
+    hero: heroImg,
+    storefront: storefrontImg,
+    doctorMale: doctorMaleImg,
+    doctorFemale: doctorFemaleImg,
   }
 };
 

@@ -74,7 +74,18 @@ export default function App() {
     try {
       const stored = localStorage.getItem('hoavang_vet_articles');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: Article[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Normalize any old local dev image paths stored in localStorage
+          return parsed.map(art => ({
+            ...art,
+            image: art.image?.includes('hero_vet_clinic_animals') ? CLINIC_INFO.images.hero :
+                   art.image?.includes('vet_doctor_male') ? CLINIC_INFO.images.doctorMale :
+                   art.image?.includes('vet_doctor_female') ? CLINIC_INFO.images.doctorFemale :
+                   art.image?.includes('clinic_storefront') ? CLINIC_INFO.images.storefront :
+                   art.image || CLINIC_INFO.images.hero,
+          }));
+        }
       }
     } catch (e) {
       console.error(e);

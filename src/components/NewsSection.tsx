@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Newspaper, Calendar, Clock, ArrowRight, Search, Eye, PenTool, Plus } from 'lucide-react';
-import { ARTICLES_DATA } from '../data/clinicData';
+import { ARTICLES_DATA, CLINIC_INFO } from '../data/clinicData';
 import { Article } from '../types';
 
 interface NewsSectionProps {
@@ -123,7 +123,7 @@ export const NewsSection: React.FC<NewsSectionProps> = ({
                 alt={article.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/src/assets/images/hero_vet_clinic_animals_1791617072923.jpg';
+                  (e.target as HTMLImageElement).src = CLINIC_INFO.images.hero;
                 }}
                 referrerPolicy="no-referrer"
               />
