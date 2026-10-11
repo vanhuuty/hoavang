@@ -12,7 +12,8 @@ import {
   Newspaper, 
   Info,
   SearchCode,
-  PenTool
+  PenTool,
+  Mail
 } from 'lucide-react';
 import { CLINIC_INFO } from '../data/clinicData';
 
@@ -21,6 +22,7 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   onOpenBooking: () => void;
   onOpenLookup: () => void;
+  onOpenConsultation?: () => void;
   onOpenWriteArticle?: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -31,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   onOpenBooking,
   onOpenLookup,
+  onOpenConsultation,
   onOpenWriteArticle,
   searchQuery,
   setSearchQuery,
@@ -70,6 +73,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="flex items-center gap-5">
+            {onOpenConsultation && (
+              <>
+                <button 
+                  onClick={onOpenConsultation}
+                  className="text-amber-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer font-bold text-xs"
+                  title="Gửi yêu cầu tư vấn đến email vanhuutyk42@gmail.com"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Tư vấn qua mail</span>
+                </button>
+                <span className="text-sky-400">|</span>
+              </>
+            )}
             <button 
               onClick={onOpenLookup}
               className="text-sky-200 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
@@ -254,6 +270,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <SearchCode className="w-4 h-4 text-sky-700" />
               Tra cứu lịch hẹn
             </button>
+            {onOpenConsultation && (
+              <button
+                onClick={() => { onOpenConsultation(); setMobileMenuOpen(false); }}
+                className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <Mail className="w-4 h-4 text-white" />
+                Gửi yêu cầu tư vấn bác sĩ (vanhuutyk42@gmail.com)
+              </button>
+            )}
             {onOpenWriteArticle && (
               <button
                 onClick={() => { onOpenWriteArticle(); setMobileMenuOpen(false); }}

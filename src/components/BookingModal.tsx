@@ -141,6 +141,34 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       console.error('Failed to save to local storage', e);
     }
 
+    // Gửi thông báo đặt lịch đến email phòng khám vanhuutyk42@gmail.com
+    try {
+      fetch('https://formsubmit.co/ajax/vanhuutyk42@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `[ĐẶT LỊCH MỚI] Mã ${code} - ${ownerName} (${phoneNumber})`,
+          _template: 'table',
+          _captcha: 'false',
+          'Mã lịch hẹn': code,
+          'Khách hàng': ownerName,
+          'Số điện thoại': phoneNumber,
+          'Email': email.trim() || 'Chưa cung cấp',
+          'Thú cưng': `${petName} (${petType}${petWeight ? ` - ${petWeight}kg` : ''})`,
+          'Dịch vụ đăng ký': serviceObj.title,
+          'Bác sĩ phụ trách': doctorName,
+          'Ngày & Giờ': `${appointmentDate} - ${timeSlot}`,
+          'Ghi chú': notes.trim() || 'Không có',
+          'Thời gian đặt': new Date().toLocaleString('vi-VN'),
+        }),
+      }).catch((err) => console.log('Booking email dispatch notice:', err));
+    } catch (err) {
+      console.log(err);
+    }
+
     setCreatedAppointment(newAppt);
     setStep(4);
     if (onBookingSuccess) onBookingSuccess(newAppt);
@@ -555,10 +583,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
               </div>
 
-              {/* Advice */}
-              <p className="text-[11px] text-slate-500 max-w-md mx-auto">
-                💡 Lưu ý: Vui lòng đưa bé đến trước giờ hẹn 5-10 phút. Nếu bé cần xét nghiệm máu hoặc siêu âm, nên cho bé nhịn ăn trước 4-6 tiếng.
-              </p>
+              {/* Advice & Email sent confirmation */}
+              <div className="space-y-1.5 max-w-md mx-auto">
+                <p className="text-[11px] text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 font-medium">
+                  📧 Thông tin lịch hẹn đã được chuyển tới email bác sĩ phòng khám: <strong>vanhuutyk42@gmail.com</strong>
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  💡 Lưu ý: Vui lòng đưa bé đến trước giờ hẹn 5-10 phút. Nếu bé cần xét nghiệm máu hoặc siêu âm, nên cho bé nhịn ăn trước 4-6 tiếng.
+                </p>
+              </div>
             </div>
           )}
 

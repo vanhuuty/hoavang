@@ -102,3 +102,17 @@ export interface Review {
   helpfulCount: number;
   verified: boolean;
 }
+
+export interface ConsultationRequest {
+  id: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  petName?: string;
+  petType?: 'Chó' | 'Mèo' | 'Khác';
+  doctorName?: string;
+  serviceInterest?: string;
+  message: string;
+  createdAt: string;
+  status: 'sent' | 'pending';
+}

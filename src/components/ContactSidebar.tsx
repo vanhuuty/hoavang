@@ -17,11 +17,13 @@ import { CLINIC_INFO } from '../data/clinicData';
 interface ContactSidebarProps {
   onOpenBooking: () => void;
   onOpenMap: () => void;
+  onOpenConsultation?: () => void;
 }
 
 export const ContactSidebar: React.FC<ContactSidebarProps> = ({
   onOpenBooking,
-  onOpenMap
+  onOpenMap,
+  onOpenConsultation,
 }) => {
   return (
     <aside className="space-y-5">
@@ -117,13 +119,25 @@ export const ContactSidebar: React.FC<ContactSidebarProps> = ({
             <p className="text-[11px] text-amber-800/80">
               Nhận ưu đãi giảm 10% khi đặt lịch trước trên website
             </p>
-            <button
-              onClick={onOpenBooking}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
-            >
-              <Calendar className="w-3.5 h-3.5 text-amber-300" />
-              <span>Đặt lịch hẹn</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={onOpenBooking}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
+              >
+                <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                <span>Đặt lịch hẹn</span>
+              </button>
+              {onOpenConsultation && (
+                <button
+                  onClick={onOpenConsultation}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all"
+                  title="Gửi câu hỏi tư vấn qua email vanhuutyk42@gmail.com"
+                >
+                  <Mail className="w-3.5 h-3.5 text-white" />
+                  <span>Tư vấn mail</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Mini pet visual */}

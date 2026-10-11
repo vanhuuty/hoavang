@@ -9,7 +9,8 @@ import {
   CheckCircle, 
   PhoneCall, 
   HeartHandshake,
-  ShieldCheck
+  ShieldCheck,
+  Mail
 } from 'lucide-react';
 import { Doctor } from '../types';
 import { CLINIC_INFO } from '../data/clinicData';
@@ -18,12 +19,14 @@ interface DoctorDetailModalProps {
   doctor: Doctor | null;
   onClose: () => void;
   onBookWithDoctor: (doctor: Doctor) => void;
+  onConsultDoctor?: (doctor: Doctor) => void;
 }
 
 export const DoctorDetailModal: React.FC<DoctorDetailModalProps> = ({
   doctor,
   onClose,
-  onBookWithDoctor
+  onBookWithDoctor,
+  onConsultDoctor
 }) => {
   if (!doctor) return null;
 
@@ -144,19 +147,32 @@ export const DoctorDetailModal: React.FC<DoctorDetailModalProps> = ({
             Hotline đặt hẹn nhanh: <strong className="text-sky-700">{CLINIC_INFO.hotline}</strong>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer"
+              className="px-3.5 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer"
             >
               Đóng lại
             </button>
+            {onConsultDoctor && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onConsultDoctor(doctor);
+                }}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                title="Gửi câu hỏi tư vấn trực tiếp đến Bác sĩ qua email vanhuutyk42@gmail.com"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Tư vấn qua Email</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 onClose();
                 onBookWithDoctor(doctor);
               }}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-700/20 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-700/20 cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-amber-300" />
               <span>Đặt lịch khám với Bác sĩ</span>

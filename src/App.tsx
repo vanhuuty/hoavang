@@ -21,14 +21,21 @@ import { AppointmentLookupModal } from './components/AppointmentLookupModal';
 import { MapModal } from './components/MapModal';
 import { WriteReviewModal } from './components/WriteReviewModal';
 import { WriteArticleModal } from './components/WriteArticleModal';
+import { ConsultationModal } from './components/ConsultationModal';
 
 import { CLINIC_INFO, DOCTORS_DATA, SERVICES_DATA, ARTICLES_DATA, INITIAL_REVIEWS_DATA } from './data/clinicData';
 import { Doctor, ServiceItem, Article, Appointment, Review } from './types';
+import { 
+  sendConsultationRequest, 
+  TARGET_CONSULTATION_EMAIL,
+  SendConsultationResult 
+} from './services/consultationService';
 import { 
   PhoneCall, 
   Calendar, 
   MapPin, 
   CheckCircle, 
+  CheckCircle2,
   Award, 
   Sparkles, 
   ShieldCheck, 
@@ -37,7 +44,14 @@ import {
   Search,
   X,
   PenTool,
-  MessageSquare
+  MessageSquare,
+  Mail,
+  Send,
+  ExternalLink,
+  User,
+  Phone,
+  Stethoscope,
+  PawPrint
 } from 'lucide-react';
 
 export default function App() {
@@ -56,6 +70,76 @@ export default function App() {
   // Preselected IDs for booking
   const [bookingPreServiceId, setBookingPreServiceId] = useState<string | undefined>(undefined);
   const [bookingPreDoctorId, setBookingPreDoctorId] = useState<string | undefined>(undefined);
+
+  // Consultation Modal State
+  const [isConsultationOpen, setIsConsultationOpen] = useState(false);
+  const [consultationPreDoctor, setConsultationPreDoctor] = useState<string | undefined>(undefined);
+  const [consultationPreService, setConsultationPreService] = useState<string | undefined>(undefined);
+
+  const handleOpenConsultation = (doctorName?: string, serviceInterest?: string) => {
+    setConsultationPreDoctor(doctorName);
+    setConsultationPreService(serviceInterest);
+    setIsConsultationOpen(true);
+  };
+
+  // Contact Page Consultation Form State
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPetName, setContactPetName] = useState('');
+  const [contactPetType, setContactPetType] = useState<'Chó' | 'Mèo' | 'Khác'>('Chó');
+  const [contactDoctor, setContactDoctor] = useState('BS. Hữu Tỵ (Ngoại khoa & Cấp cứu)');
+  const [contactService, setContactService] = useState('Khám bệnh & Chẩn đoán triệu chứng');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isContactSubmitting, setIsContactSubmitting] = useState(false);
+  const [contactSentResult, setContactSentResult] = useState<SendConsultationResult | null>(null);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim()) {
+      showToast('Vui lòng nhập họ và tên của bạn.');
+      return;
+    }
+    if (!contactPhone.trim()) {
+      showToast('Vui lòng nhập số điện thoại để bác sĩ liên hệ.');
+      return;
+    }
+    if (!contactMessage.trim()) {
+      showToast('Vui lòng mô tả câu hỏi hoặc tình trạng của bé.');
+      return;
+    }
+
+    setIsContactSubmitting(true);
+    try {
+      const res = await sendConsultationRequest({
+        fullName: contactName,
+        phone: contactPhone,
+        email: contactEmail.trim() || undefined,
+        petName: contactPetName.trim() || undefined,
+        petType: contactPetType,
+        doctorName: contactDoctor,
+        serviceInterest: contactService,
+        message: contactMessage,
+      });
+
+      setContactSentResult(res);
+      showToast(`Đã gửi yêu cầu tư vấn thành công tới hộp thư ${TARGET_CONSULTATION_EMAIL}!`);
+    } catch (err) {
+      console.error(err);
+      showToast(`Có lỗi xảy ra, vui lòng liên hệ Hotline: ${CLINIC_INFO.hotline}`);
+    } finally {
+      setIsContactSubmitting(false);
+    }
+  };
+
+  const handleResetContactForm = () => {
+    setContactSentResult(null);
+    setContactName('');
+    setContactPhone('');
+    setContactEmail('');
+    setContactPetName('');
+    setContactMessage('');
+  };
 
   // Reviews & Moderation State
   const [reviews, setReviews] = useState<Review[]>(() => {
@@ -251,6 +335,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenBooking={() => handleOpenBooking()}
         onOpenLookup={() => setIsLookupOpen(true)}
+        onOpenConsultation={() => handleOpenConsultation()}
         onOpenWriteArticle={() => setIsWriteArticleOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -352,6 +437,7 @@ export default function App() {
             {/* Hero Section */}
             <Hero
               onOpenBooking={() => handleOpenBooking()}
+              onOpenConsultation={() => handleOpenConsultation()}
               onExploreMore={() => {
                 const el = document.getElementById('about-anchor');
                 el?.scrollIntoView({ behavior: 'smooth' });
@@ -434,7 +520,18 @@ export default function App() {
                                 }}
                                 className="text-[11px] font-bold text-sky-700 hover:text-sky-800 underline"
                               >
-                                Đặt lịch khám
+                                Đặt khám
+                              </button>
+                              <span className="text-slate-300">·</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenConsultation(doc.name);
+                                }}
+                                className="text-[11px] font-bold text-amber-600 hover:text-amber-700 underline"
+                                title="Gửi câu hỏi tư vấn qua email vanhuutyk42@gmail.com"
+                              >
+                                Tư vấn
                               </button>
                             </div>
                           </div>
@@ -467,6 +564,7 @@ export default function App() {
                   <ContactSidebar
                     onOpenBooking={() => handleOpenBooking()}
                     onOpenMap={() => setIsMapOpen(true)}
+                    onOpenConsultation={() => handleOpenConsultation()}
                   />
                 </div>
 
@@ -534,6 +632,7 @@ export default function App() {
             <DoctorsSection
               onSelectDoctor={(doc) => setSelectedDoctor(doc)}
               onBookDoctor={(doc) => handleBookWithDoctor(doc)}
+              onConsultDoctor={(doc) => handleOpenConsultation(doc.name)}
             />
           </div>
         )}
@@ -619,6 +718,7 @@ export default function App() {
             <DoctorsSection
               onSelectDoctor={(doc) => setSelectedDoctor(doc)}
               onBookDoctor={(doc) => handleBookWithDoctor(doc)}
+              onConsultDoctor={(doc) => handleOpenConsultation(doc.name)}
             />
           </div>
         )}
@@ -682,56 +782,203 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Left Column: Direct Info & Message Box */}
               <div className="lg:col-span-7 space-y-6 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs">
-                <h3 className="text-lg font-black text-slate-900">
-                  Gửi lời nhắn hoặc yêu cầu tư vấn
-                </h3>
-                
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    showToast('Cảm ơn bạn! Phòng khám thú y Hòa Vang sẽ liên hệ tư vấn trong ít phút.');
-                    (e.target as HTMLFormElement).reset();
-                  }}
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Họ và tên của bạn</label>
-                      <input 
-                        required
-                        type="text" 
-                        placeholder="VD: Trần Văn Minh"
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
-                      />
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">
+                    Gửi lời nhắn hoặc yêu cầu tư vấn
+                  </h3>
+                  <p className="text-xs text-sky-700 font-semibold mt-1 flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-sky-600" />
+                    <span>Yêu cầu sẽ được chuyển trực tiếp đến hộp thư Bác sĩ: <strong>{TARGET_CONSULTATION_EMAIL}</strong></span>
+                  </p>
+                </div>
+
+                {contactSentResult ? (
+                  /* Success View */
+                  <div className="p-6 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-4 animate-in fade-in">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-bold text-emerald-950">
+                          Gửi yêu cầu tư vấn thành công!
+                        </h4>
+                        <p className="text-xs text-emerald-800">
+                          Toàn bộ nội dung đã được chuyển đến hòm thư: <strong>{TARGET_CONSULTATION_EMAIL}</strong>
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Số điện thoại liên hệ</label>
-                      <input 
-                        required
-                        type="tel" 
-                        placeholder="VD: 0935 77 87 27"
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
-                      />
+
+                    {/* Sent Details Summary */}
+                    <div className="p-3.5 bg-white rounded-xl border border-emerald-200 text-xs space-y-1.5 text-slate-700">
+                      <div><strong>Khách hàng:</strong> {contactSentResult.record.fullName} - {contactSentResult.record.phone}</div>
+                      {contactSentResult.record.email && (
+                        <div><strong>Email phản hồi:</strong> {contactSentResult.record.email}</div>
+                      )}
+                      <div><strong>Bác sĩ:</strong> {contactSentResult.record.doctorName || 'Bác sĩ trực'}</div>
+                      <div><strong>Nội dung:</strong> &ldquo;{contactSentResult.record.message}&rdquo;</div>
+                    </div>
+
+                    <div className="text-[11px] text-emerald-800">
+                      ⏱️ Bác sĩ Hữu Tỵ hoặc Bác sĩ Sương Mai sẽ kiểm tra email và liên hệ lại cho bạn trong vòng 15 - 30 phút.
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        onClick={handleResetContactForm}
+                        className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Gửi thêm câu hỏi khác
+                      </button>
+                      <a
+                        href={contactSentResult.mailtoUrl}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Mở App Mail</span>
+                      </a>
+                      <a
+                        href={contactSentResult.gmailWebUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Mở Gmail Web</span>
+                      </a>
                     </div>
                   </div>
+                ) : (
+                  /* Form View */
+                  <form onSubmit={handleContactSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Họ và tên của bạn</span>
+                          <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          required
+                          type="text" 
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          placeholder="VD: Trần Văn Minh"
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Số điện thoại liên hệ</span>
+                          <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          required
+                          type="tel" 
+                          value={contactPhone}
+                          onChange={(e) => setContactPhone(e.target.value)}
+                          placeholder="VD: 0935 77 87 27"
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
+                        />
+                      </div>
+                    </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700">Nội dung câu hỏi / Tình trạng của bé</label>
-                    <textarea 
-                      required
-                      rows={4}
-                      placeholder="Mô tả triệu chứng của thú cưng hoặc dịch vụ bạn muốn tìm hiểu..."
-                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
-                    />
-                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Email của bạn (tùy chọn)</span>
+                        </label>
+                        <input 
+                          type="email" 
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          placeholder="VD: tranminh@gmail.com"
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
+                        />
+                      </div>
 
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all"
-                  >
-                    Gửi yêu cầu tư vấn miễn phí
-                  </button>
-                </form>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <PawPrint className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Tên thú cưng (nếu có)</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={contactPetName}
+                          onChange={(e) => setContactPetName(e.target.value)}
+                          placeholder="VD: Bé Lu, Mèo Mun"
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                          <Stethoscope className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Bác sĩ chỉ định</span>
+                        </label>
+                        <select 
+                          value={contactDoctor}
+                          onChange={(e) => setContactDoctor(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                        >
+                          <option value="BS. Hữu Tỵ (Ngoại khoa & Cấp cứu)">BS. Hữu Tỵ (Ngoại khoa & Cấp cứu)</option>
+                          <option value="BS. Sương Mai (Nội khoa & Da liễu)">BS. Sương Mai (Nội khoa & Da liễu)</option>
+                          <option value="Bác sĩ phiên trực gần nhất">Bác sĩ phiên trực gần nhất</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">Dịch vụ quan tâm</label>
+                        <select 
+                          value={contactService}
+                          onChange={(e) => setContactService(e.target.value)}
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                        >
+                          <option value="Khám bệnh & Chẩn đoán triệu chứng">Khám bệnh & Chẩn đoán triệu chứng</option>
+                          <option value="Tiêm vaccine & Sổ giun">Tiêm vaccine & Sổ giun</option>
+                          <option value="Phẫu thuật ngoại khoa & Triệt sản">Phẫu thuật ngoại khoa & Triệt sản</option>
+                          <option value="Da liễu & Nấm ngứa">Da liễu & Nấm ngứa</option>
+                          <option value="Cấp cứu thú cưng">Cấp cứu thú cưng</option>
+                          <option value="Khác">Vấn đề khác</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">Nội dung câu hỏi / Tình trạng của bé *</label>
+                      <textarea 
+                        required
+                        rows={4}
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        placeholder="Mô tả triệu chứng của thú cưng hoặc dịch vụ bạn muốn tìm hiểu..."
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:border-sky-500"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isContactSubmitting}
+                      className="px-6 py-3 bg-sky-700 hover:bg-sky-800 active:scale-98 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {isContactSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Đang gửi thư đến {TARGET_CONSULTATION_EMAIL}...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Gửi yêu cầu tư vấn đến {TARGET_CONSULTATION_EMAIL}</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
 
                 {/* Direct quick cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-100 text-xs">
@@ -800,6 +1047,15 @@ export default function App() {
         </button>
 
         <button
+          onClick={() => handleOpenConsultation()}
+          className="flex flex-col items-center justify-center py-1 px-2 text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
+          title="Tư vấn bác sĩ qua email"
+        >
+          <Mail className="w-5 h-5 text-amber-500" />
+          <span className="text-[10px] font-bold mt-0.5">Tư vấn</span>
+        </button>
+
+        <button
           onClick={() => setIsWriteArticleOpen(true)}
           className="flex flex-col items-center justify-center py-1 px-2 text-slate-700 hover:text-sky-700 transition-colors cursor-pointer"
           title="Viết bài mới"
@@ -841,6 +1097,7 @@ export default function App() {
         doctor={selectedDoctor}
         onClose={() => setSelectedDoctor(null)}
         onBookWithDoctor={handleBookWithDoctor}
+        onConsultDoctor={(doc) => handleOpenConsultation(doc.name)}
       />
 
       {/* 3. Service Detail Modal */}
@@ -885,6 +1142,15 @@ export default function App() {
         isOpen={isWriteArticleOpen}
         onClose={() => setIsWriteArticleOpen(false)}
         onSubmitArticle={handleCreateArticle}
+      />
+
+      {/* 9. Doctor Consultation Email Modal (Gửi tới vanhuutyk42@gmail.com) */}
+      <ConsultationModal
+        isOpen={isConsultationOpen}
+        onClose={() => setIsConsultationOpen(false)}
+        initialDoctorName={consultationPreDoctor}
+        initialServiceInterest={consultationPreService}
+        onSuccess={(msg) => showToast(msg)}
       />
 
     </div>

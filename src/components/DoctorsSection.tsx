@@ -7,7 +7,8 @@ import {
   Award, 
   Clock, 
   Sparkles,
-  Heart
+  Heart,
+  Mail
 } from 'lucide-react';
 import { DOCTORS_DATA } from '../data/clinicData';
 import { Doctor } from '../types';
@@ -15,11 +16,13 @@ import { Doctor } from '../types';
 interface DoctorsSectionProps {
   onSelectDoctor: (doctor: Doctor) => void;
   onBookDoctor: (doctor: Doctor) => void;
+  onConsultDoctor?: (doctor: Doctor) => void;
 }
 
 export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
   onSelectDoctor,
-  onBookDoctor
+  onBookDoctor,
+  onConsultDoctor
 }) => {
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
 
@@ -130,17 +133,36 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
 
                 {/* Actions */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <button
-                    onClick={() => onBookDoctor(doctor)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-sky-700 hover:bg-sky-800 active:scale-98 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Đặt lịch khám với BS</span>
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => onBookDoctor(doctor)}
+                      className="flex items-center justify-center gap-1.5 py-2.5 bg-sky-700 hover:bg-sky-800 active:scale-98 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+                    >
+                      <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Đặt khám</span>
+                    </button>
+                    {onConsultDoctor ? (
+                      <button
+                        onClick={() => onConsultDoctor(doctor)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-bold border border-amber-200 transition-all cursor-pointer"
+                        title="Gửi câu hỏi tư vấn đến email vanhuutyk42@gmail.com"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Tư vấn mail</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onSelectDoctor(doctor)}
+                        className="py-2.5 text-slate-600 hover:text-sky-700 text-xs font-semibold text-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                      >
+                        Hồ sơ
+                      </button>
+                    )}
+                  </div>
 
                   <button
                     onClick={() => onSelectDoctor(doctor)}
-                    className="w-full py-1.5 text-slate-600 hover:text-sky-700 text-xs font-semibold text-center cursor-pointer transition-colors"
+                    className="w-full py-1 text-slate-600 hover:text-sky-700 text-xs font-medium text-center cursor-pointer transition-colors"
                   >
                     Xem chi tiết hồ sơ & lịch trực →
                   </button>

@@ -1,13 +1,14 @@
 import React from 'react';
-import { ArrowRight, Calendar, Heart, ShieldCheck, Clock, Award } from 'lucide-react';
+import { ArrowRight, Calendar, Heart, ShieldCheck, Clock, Award, Mail } from 'lucide-react';
 import { CLINIC_INFO } from '../data/clinicData';
 
 interface HeroProps {
   onOpenBooking: () => void;
   onExploreMore: () => void;
+  onOpenConsultation?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onOpenBooking, onExploreMore }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenBooking, onExploreMore, onOpenConsultation }) => {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-sky-50/70 via-sky-50/30 to-white py-8 lg:py-14 border-b border-sky-100/60">
       
@@ -63,7 +64,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking, onExploreMore }) => {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
               <button
                 onClick={onOpenBooking}
                 className="flex items-center gap-2.5 px-6 py-3.5 bg-sky-700 hover:bg-sky-800 active:scale-95 text-white font-bold text-sm sm:text-base rounded-full shadow-lg shadow-sky-700/25 transition-all cursor-pointer"
@@ -71,6 +72,17 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking, onExploreMore }) => {
                 <Calendar className="w-5 h-5 text-amber-300" />
                 <span>Đặt lịch khám online</span>
               </button>
+
+              {onOpenConsultation && (
+                <button
+                  onClick={onOpenConsultation}
+                  className="flex items-center gap-2 px-5 py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-sm sm:text-base rounded-full shadow-md shadow-amber-500/25 transition-all cursor-pointer"
+                  title="Gửi câu hỏi tư vấn đến email vanhuutyk42@gmail.com"
+                >
+                  <Mail className="w-4 h-4 text-white" />
+                  <span>Tư vấn qua email</span>
+                </button>
+              )}
 
               <button
                 onClick={onExploreMore}

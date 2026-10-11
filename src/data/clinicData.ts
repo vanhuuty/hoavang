@@ -12,7 +12,7 @@ export const CLINIC_INFO = {
   hotline: '0935 77 87 27',
   zalo: '0935778727',
   emergencyHotline: '0935 77 87 27',
-  email: 'phongkhamthuyhoavang@gmail.com',
+  email: 'vanhuutyk42@gmail.com',
   workingHours: '7:00 - 19:00 (Tất cả các ngày trong tuần)',
   emergencyService: 'Cấp cứu 24/7 khi gọi hotline',
   googleMapsUrl: 'https://maps.google.com/?q=Đường+Phan+Quang+Định,+Hòa+Khánh,+Đà+Nẵng',
