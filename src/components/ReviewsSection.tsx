@@ -45,7 +45,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState<string>('');
-  const [replyAuthor, setReplyAuthor] = useState<string>('BS. CKI. Nguyễn Văn Hùng');
+  const [replyAuthor, setReplyAuthor] = useState<string>('BS. Hữu Tỵ');
 
   // Calculations for approved reviews
   const approvedReviews = reviews.filter(r => r.status === 'approved');
@@ -596,9 +596,8 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                           onChange={(e) => setReplyAuthor(e.target.value)}
                           className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl font-semibold text-slate-800"
                         >
-                          <option value="BS. CKI. Nguyễn Văn Hùng">BS. CKI. Nguyễn Văn Hùng (Trưởng phòng khám)</option>
-                          <option value="BS. ThS. Trần Thu Hà">BS. ThS. Trần Thu Hà (Phó Trưởng phòng khám)</option>
-                          <option value="BS. Lê Minh Trí">BS. Lê Minh Trí (Bác sĩ điều trị)</option>
+                          <option value="BS. Hữu Tỵ">BS. Hữu Tỵ (Trưởng phòng khám)</option>
+                          <option value="BS. Sương Mai">BS. Sương Mai (Phó Trưởng phòng khám)</option>
                           <option value="Ban Quản Trị Phòng Khám Hòa Vang">Ban Quản Trị Phòng Khám</option>
                         </select>
                       </div>

@@ -87,8 +87,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onLearnMore, onOpenB
                 <UserCheck className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-lg sm:text-xl font-black text-sky-900 leading-tight">5+</div>
-                <div className="text-[11px] text-slate-500 font-medium">Bác sĩ thú y</div>
+                <div className="text-lg sm:text-xl font-black text-sky-900 leading-tight">2</div>
+                <div className="text-[11px] text-slate-500 font-medium">Bác sĩ chuyên môn</div>
               </div>
             </div>
 

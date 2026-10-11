@@ -24,19 +24,15 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
 
   const specialties = [
-    { id: 'all', label: 'Tất cả bác sĩ' },
-    { id: 'ngoai', label: 'Ngoại khoa & Phẫu thuật' },
-    { id: 'meo', label: 'Chuyên khoa Mèo & Thú nhỏ' },
-    { id: 'dalieu', label: 'Da liễu & Dinh dưỡng' },
-    { id: 'tiem', label: 'Tiêm chủng & Xét nghiệm' },
+    { id: 'all', label: 'Cả 2 Bác sĩ' },
+    { id: 'ngoai', label: 'BS. Hữu Tỵ (Ngoại khoa & Cấp cứu)' },
+    { id: 'noi', label: 'BS. Sương Mai (Nội khoa & Mèo)' },
   ];
 
   const filteredDoctors = DOCTORS_DATA.filter((doc) => {
     if (selectedSpecialty === 'all') return true;
-    if (selectedSpecialty === 'ngoai') return doc.specialties.some(s => s.toLowerCase().includes('phẫu thuật') || s.toLowerCase().includes('ngoại'));
-    if (selectedSpecialty === 'meo') return doc.specialties.some(s => s.toLowerCase().includes('mèo') || s.toLowerCase().includes('sản'));
-    if (selectedSpecialty === 'dalieu') return doc.specialties.some(s => s.toLowerCase().includes('da liễu') || s.toLowerCase().includes('dinh dưỡng'));
-    if (selectedSpecialty === 'tiem') return doc.specialties.some(s => s.toLowerCase().includes('tiêm') || s.toLowerCase().includes('xét nghiệm'));
+    if (selectedSpecialty === 'ngoai') return doc.id === 'dr-huu-ty';
+    if (selectedSpecialty === 'noi') return doc.id === 'dr-suong-mai';
     return true;
   });
 
@@ -49,13 +45,13 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sky-700">
               <UserCheck className="w-5 h-5" />
-              <span className="text-xs uppercase font-extrabold tracking-wider">Đội ngũ chuyên gia</span>
+              <span className="text-xs uppercase font-extrabold tracking-wider">Đội ngũ chuyên gia phụ trách</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Hồ sơ Bác sĩ Thú y Hòa Vang
+              Bác sĩ Thú y Hòa Vang
             </h2>
             <p className="text-sm text-slate-600 max-w-2xl">
-              100% bác sĩ tốt nghiệp chính quy các trường đại học thú y hàng đầu, có chứng chỉ hành nghề và giàu tình yêu thương đối với động vật.
+              Đội ngũ gồm 2 bác sĩ chuyên môn tận tâm: <strong>BS. Hữu Tỵ</strong> (Trưởng phòng khám, Ngoại khoa & Phẫu thuật) và <strong>BS. Sương Mai</strong> (Phó Trưởng phòng khám, Nội khoa & Thú nhỏ). 100% tốt nghiệp chính quy, giàu kinh nghiệm và hết lòng vì sức khỏe thú cưng.
             </p>
           </div>
 
@@ -77,15 +73,15 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
           </div>
         </div>
 
-        {/* Doctor Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Doctor Grid - 2 Doctors layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8">
           {filteredDoctors.map((doctor) => (
             <div
               key={doctor.id}
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-sky-300 transition-all flex flex-col group"
             >
               {/* Doctor Avatar Image */}
-              <div className="relative h-56 overflow-hidden bg-slate-100">
+              <div className="relative h-64 sm:h-72 overflow-hidden bg-slate-100">
                 <img
                   src={doctor.avatar}
                   alt={doctor.name}
@@ -97,24 +93,24 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
                 <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1 text-[11px] font-bold text-amber-500">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <span>{doctor.rating}</span>
-                  <span className="text-slate-400 font-normal">({doctor.reviewCount})</span>
+                  <span className="text-slate-400 font-normal">({doctor.reviewCount} đánh giá)</span>
                 </div>
 
                 {/* Experience badge */}
-                <div className="absolute bottom-3 left-3 bg-sky-900/85 backdrop-blur-xs text-white px-2.5 py-0.5 rounded-md text-[11px] font-medium">
-                  {doctor.experienceYears} năm kinh nghiệm
+                <div className="absolute bottom-3 left-3 bg-sky-900/90 backdrop-blur-xs text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-xs">
+                  {doctor.experienceYears}+ năm kinh nghiệm
                 </div>
               </div>
 
               {/* Doctor Content */}
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2">
+              <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2.5">
                   <div className="text-[11px] text-sky-700 font-bold uppercase tracking-wider line-clamp-1">
                     {doctor.title}
                   </div>
                   <h3 
                     onClick={() => onSelectDoctor(doctor)}
-                    className="text-lg font-black text-slate-900 group-hover:text-sky-700 transition-colors cursor-pointer"
+                    className="text-xl font-black text-slate-900 group-hover:text-sky-700 transition-colors cursor-pointer"
                   >
                     {doctor.name}
                   </h3>
@@ -123,17 +119,12 @@ export const DoctorsSection: React.FC<DoctorsSectionProps> = ({
                   </p>
 
                   {/* Specialties tags */}
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {doctor.specialties.slice(0, 2).map((s, idx) => (
-                      <span key={idx} className="text-[11px] text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md">
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {doctor.specialties.map((s, idx) => (
+                      <span key={idx} className="text-[11px] text-sky-800 bg-sky-50 border border-sky-100 px-2.5 py-0.5 rounded-lg font-medium">
                         {s}
                       </span>
                     ))}
-                    {doctor.specialties.length > 2 && (
-                      <span className="text-[11px] text-slate-400 py-0.5">
-                        +{doctor.specialties.length - 2}
-                      </span>
-                    )}
                   </div>
                 </div>
 
